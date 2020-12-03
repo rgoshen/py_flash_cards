@@ -4,10 +4,17 @@ from random import choice, random
 
 BACKGROUND_COLOR = "#B1DDC6"
 current_card = {}
+to_learn = {}
 
-data = pandas.read_csv("./data/french_words.csv")
-to_learn = data.to_dict(orient="records")
+try:
+    data = pandas.read_csv("./data/words_to_learn.csv")
+except FileNotFoundError:
+    original_data = pandas.read_csv("./data.french_words.csv")
+    to_learn = original_data.to_dict(orient="records")
+else:
+    to_learn = data.to_dict(orient="records")
 
+# ------------------------- CARD FLIPPING ----------------------------- #
 def next_card():
     """Generates next flash card."""
     global current_card, flip_timer
@@ -31,6 +38,13 @@ def flip_card():
     canvas.itemconfig(card_word, text=current_card["English"], fill="white")
     canvas.itemconfig(card_background, image=card_back_img)
     
+# ------------------------- SAVE PROGRESS ----------------------------- #
+def is_known():
+    """Removes current card from list the user checks as known word."""
+    to_learn.remove(current_card)
+    data = pandas.DataFrame(to_learn)
+    data.to_csv("./data/words_to_learn.csv", index=False)
+    next_card()
 
 # --------------------------- UI SETUP -------------------------------- #
 window = Tk()
@@ -54,7 +68,7 @@ x_image = PhotoImage(file="./images/wrong.png")
 check_image = PhotoImage(file="./images/right.png")
 unknown_button = Button(image=x_image, highlightthickness=0, command=next_card)
 unknown_button.grid(row=1, column=0)
-known_button = Button(image=check_image, highlightthickness=0, command=next_card)
+known_button = Button(image=check_image, highlightthickness=0, command=is_known)
 known_button.grid(row=1, column=1)
 
 next_card()
